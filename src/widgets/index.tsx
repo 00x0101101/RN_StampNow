@@ -1,43 +1,52 @@
-import { declareIndexPlugin, ReactRNPlugin, WidgetLocation } from '@remnote/plugin-sdk';
+import { declareIndexPlugin, ReactRNPlugin, SetRemType } from '@remnote/plugin-sdk';
 import '../style.css';
 import '../App.css';
 
 async function onActivate(plugin: ReactRNPlugin) {
-  // Register settings
-  await plugin.settings.registerStringSetting({
-    id: 'name',
-    title: 'What is your Name?',
-    defaultValue: 'Bob',
-  });
 
-  await plugin.settings.registerBooleanSetting({
-    id: 'pizza',
-    title: 'Do you like pizza?',
-    defaultValue: true,
-  });
 
-  await plugin.settings.registerNumberSetting({
-    id: 'favorite-number',
-    title: 'What is your favorite number?',
-    defaultValue: 42,
-  });
-
-  // A command that inserts text into the editor if focused.
   await plugin.app.registerCommand({
-    id: 'editor-command',
-    name: 'Editor Command',
+    id: 'stamp_Now',
+    name: 'StampNow',
+    quickCode:"sn",
     action: async () => {
-      plugin.editor.insertPlainText('Hello World!');
+      let stamp=await createStamp(new Date());
+      let thisRem=await plugin.focus.getFocusedRem();
+      if(stamp&&thisRem)
+      {
+        let stampElement=(await plugin.richText.rem(stamp).value());
+        let thisText=thisRem.text.concat(stampElement);
+        thisRem?.setText(thisText);
+      }
     },
   });
 
-  // Show a toast notification to the user.
-  await plugin.app.toast("I'm a toast!");
 
-  // Register a sidebar widget.
-  await plugin.app.registerWidget('sample_widget', WidgetLocation.RightSidebar, {
-    dimensions: { height: 'auto', width: '100%' },
-  });
+
+  const createStamp=async (date:Date|undefined)=>{
+    date=date||new Date();
+    let stampText=`${date.getHours()}:${date.getMinutes()}`
+    let stampRichText=await plugin.richText.text(stampText).value()
+
+    let daily=await plugin.date.getDailyDoc(date);
+    if(!(daily))
+    {
+      await plugin.app.toast("Failed to Locate Dairy");
+      return;
+    }
+    let stamp= (await plugin.rem.findByName(stampRichText,daily._id))||(await plugin.rem.createRem())
+    stamp?.setType(SetRemType.DESCRIPTOR)
+    if(!stamp)
+    {
+      await plugin.app.toast("Failed to Create Stamp");
+      return;
+    }
+
+    await stamp.setParent(daily);
+    await stamp.setText(stampRichText);
+    return stamp
+  }
+
 }
 
 async function onDeactivate(_: ReactRNPlugin) {}
