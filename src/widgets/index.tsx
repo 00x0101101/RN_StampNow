@@ -1,6 +1,7 @@
-import { declareIndexPlugin, ReactRNPlugin, SetRemType } from '@remnote/plugin-sdk';
+import { declareIndexPlugin, ReactRNPlugin, RichTextInterface, SetRemType } from '@remnote/plugin-sdk';
 import '../style.css';
 import '../App.css';
+import moment from 'moment';
 
 async function onActivate(plugin: ReactRNPlugin) {
 
@@ -23,9 +24,13 @@ async function onActivate(plugin: ReactRNPlugin) {
 
 
 
+
+
   const createStamp=async (date:Date|undefined)=>{
     date=date||new Date();
-    let stampText=`${date.getHours()}:${date.getMinutes()}`
+    let mo=moment(date);
+
+    let stampText=`${mo.format("HH:mm")}`
     let stampRichText=await plugin.richText.text(stampText).value()
 
     let daily=await plugin.date.getDailyDoc(date);
@@ -45,6 +50,12 @@ async function onActivate(plugin: ReactRNPlugin) {
     await stamp.setParent(daily);
     await stamp.setText(stampRichText);
     return stamp
+  }
+
+  //todo: a function to add timestamp for the past or the future.
+  const RichText2Date=(rText:RichTextInterface)=>{
+    let date=new Date();
+
   }
 
 }
