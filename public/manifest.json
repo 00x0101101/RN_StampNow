@@ -8,8 +8,8 @@
   "repoUrl":"https://github.com/00x0101101/RN_StampNow",
   "version": {
     "major": 0,
-    "minor": 1,
-    "patch": 2
+    "minor": 2,
+    "patch": 0
   },
   "requestNative": false,
   "requiredScopes": [

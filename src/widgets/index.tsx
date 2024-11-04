@@ -10,6 +10,13 @@ import '../style.css';
 import '../App.css';
 import moment from 'moment';
 
+//todo:
+// 1.adapt some operations according the platform OS
+//      some api like "insertRichText" may not work perperly in current version of plugin api
+// 2.turn stamp/ref to stamp to a property or a source reference( partially done)
+
+
+
 //region const definitions
 // external const value:origin definition is in "consts.tsx" under the project: [GTD_On_RN](https://github.com/00x0101101/GTD_On_RN)
 const TICK_PW = 'time_tick';
@@ -22,6 +29,24 @@ async function onActivate(plugin: ReactRNPlugin) {
 		return children && await filterAsync(children, c => c.isProperty());
 	};
 
+
+	await plugin.settings.registerDropdownSetting({
+		defaultValue: 'src', id: 'stamp_form', title: 'time stamps as',description:"the timestamps will be stamped onto the rem as...",
+		options:[{
+			key:"0",
+			value:"src",
+			label:"a source added"
+		}, {
+			key:"1",
+			value:"ref",
+			label:"a referencing to the stamp"
+		},{
+			key:"2",
+			value:"tag",
+			label: "as a tag onto the rem"
+		}]
+	})
+
 	await plugin.app.registerCommand({
 		id: 'stamp_Now',
 		name: 'StampNow',
@@ -31,10 +56,20 @@ async function onActivate(plugin: ReactRNPlugin) {
 			let thisRem = await plugin.focus.getFocusedRem();
 			if (stamp && thisRem && stamp._id!==thisRem._id) {
 
+				const form = await plugin.settings.getSetting('stamp_form')
+				if("ref"===form){
+					let stampElement = (await plugin.richText.rem(stamp).value());
+					await plugin.editor.insertRichText(stampElement);
+				}
 				// await stamp.copyReferenceToClipboard();
 				// await plugin.app.toast('Stamp Copied!');
-				let stampElement = (await plugin.richText.rem(stamp).value());
-				await plugin.editor.insertRichText(stampElement);
+				if("src"===form){
+					// let stampElement = (await plugin.richText.rem(stamp).value());
+					await thisRem.addSource(stamp)
+				}
+				if("tag"===form){
+					await thisRem.addTag(stamp)
+				}
 			}
 		},
 
